@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无界私房 · Private Bistro Menu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+SC:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Noto Serif SC"', 'serif'],
+                        display: ['Cinzel', 'serif'],
+                    },
+                    colors: {
+                        bistro: {
+                            950: '#0F0E0C',
+                            900: '#1A1713',
+                            800: '#26211B',
+                            700: '#3D352B',
+                            100: '#F5EFE6',
+                            primary: '#D4AF37', // Gold
+                            accent: '#C85A17',  // Warm Amber/Rust
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0F0E0C;
+            color: #F5EFE6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1A1713;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3D352B;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col pb-32">
+
+    <!-- Hero Header Section -->
+    <header class="relative border-b border-bistro-800 bg-bistro-950 py-12 px-6 overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_70%)]"></div>
+        <div class="max-w-6xl mx-auto text-center relative z-10">
+            <h1 class="font-display text-4xl md:text-5xl lg:text-6xl tracking-widest text-bistro-primary mb-3">
+                𝖯𝖱𝖨𝖵𝖠𝖳𝖤 𝖡𝖨𝖲𝖳𝖱𝖮
+            </h1>
+            <h2 class="font-serif text-2xl md:text-3xl font-light tracking-wide text-bistro-100 mb-6">
+                无 界 私 房 菜 单
+            </h2>
+            <div class="w-24 h-0.5 bg-gradient-to-r from-transparent via-bistro-primary to-transparent mx-auto mb-6"></div>
+            <p class="max-w-xl mx-auto text-sm md:text-base text-stone-400 font-serif leading-relaxed">
+                融汇江西至辣、江浙海错、广府镬气与无国界融合暖心风味。<br>
+                <span class="text-bistro-primary/80">—— 请挑选今宵为您定制的专属席面 ——</span>
+            </p>
+        </div>
+    </header>
+
+    <!-- Toolbar: Search and Stats -->
+    <section class="sticky top-0 z-30 bg-bistro-950/90 backdrop-blur-md border-b border-bistro-800 py-4 px-4 shadow-lg">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
+            <!-- Search Bar -->
+            <div class="relative w-full md:max-w-xs">
+                <input type="text" id="searchInput" placeholder="搜索风味名、主料..." 
+                    class="w-full pl-10 pr-4 py-2 bg-bistro-900 border border-bistro-800 rounded-full text-sm text-bistro-100 focus:outline-none focus:border-bistro-primary transition-colors placeholder-stone-500">
+                <i data-lucide="search" class="absolute left-3.5 top-2.5 w-4.5 h-4.5 text-stone-500"></i>
+            </div>
+
+            <!-- Categories Tabs (Horizontal Scroll on Mobile) -->
+            <div class="w-full md:w-auto overflow-x-auto no-scrollbar py-1">
+                <div class="flex gap-2 min-w-max" id="categoryTabs">
+                    <button onclick="filterCategory('all')" class="category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border border-bistro-primary bg-bistro-primary text-bistro-950 transition-all font-semibold" data-cat="all">
+                        全席 (All)
+                    </button>
+                    <!-- Will dynamically insert categories -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Dishes Grid -->
+    <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow">
+        <div id="dishesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic dishes will load here -->
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="hidden text-center py-16">
+            <i data-lucide="compass" class="w-12 h-12 text-stone-600 mx-auto mb-4 animate-spin-slow"></i>
+            <h3 class="font-serif text-lg text-stone-400">未能觅得此番美味</h3>
+            <p class="text-xs text-stone-600 mt-2">换个词搜搜看，或是浏览其他分类吧</p>
+        </div>
+    </main>
+
+    <!-- Floating Basket Button & Drawer -->
+    <div id="basketSummary" class="fixed bottom-0 left-0 right-0 z-40 bg-bistro-900 border-t border-bistro-800 shadow-2xl transition-transform duration-300 transform translate-y-full">
+        <!-- Handle to pull up/down -->
+        <div onclick="toggleBasketDrawer()" class="flex justify-between items-center px-6 py-4 bg-bistro-800 cursor-pointer hover:bg-bistro-700/80 transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <i data-lucide="shopping-bag" class="w-6 h-6 text-bistro-primary"></i>
+                    <span id="basketBadge" class="absolute -top-2 -right-2 bg-bistro-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                </div>
+                <div>
+                    <span class="font-serif text-sm md:text-base font-semibold">已挑选的珍馐</span>
+                    <span class="text-xs text-stone-400 block md:inline md:ml-2" id="basketBrief">暂未选定菜品</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-bistro-primary" id="drawerToggleText">展开订单详情</span>
+                <i id="drawerArrow" data-lucide="chevron-up" class="w-5 h-5 text-bistro-primary transition-transform"></i>
+            </div>
+        </div>
+
+        <!-- Drawer Content -->
+        <div class="max-h-[60vh] overflow-y-auto px-6 py-6 border-t border-bistro-800">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <!-- Selected Items List -->
+                <div class="space-y-3">
+                    <h3 class="font-serif text-sm text-bistro-primary tracking-wider border-b border-bistro-800 pb-2">已选席面清单</h3>
+                    <div id="basketItemsList" class="divide-y divide-bistro-800/40">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Customization Options -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label class="block text-xs font-serif text-stone-400 mb-2">主宴席口味偏好 (全局辣度/咸淡)</label>
+                        <select id="globalSpice" class="w-full bg-bistro-950 border border-bistro-800 rounded px-3 py-2 text-sm text-bistro-100 focus:outline-none focus:border-bistro-primary">
+                            <option value="尊重主厨推荐口味">尊重主厨推荐口味</option>
+                            <option value="纯真微辣/少盐清淡">纯真微辣 / 少盐清淡</option>
+                            <option value="中规中矩家常风味">中规中矩家常风味</option>
+                            <option value="赣味地道热辣重口">赣味地道热辣重口 (大辣/爽咸)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif text-stone-400 mb-2">特殊备注/忌口/开宴时间</label>
+                        <input type="text" id="globalNotes" placeholder="例：不要香菜/有海鲜过敏/晚7点开席..." 
+                            class="w-full bg-bistro-950 border border-bistro-800 rounded px-3 py-2 text-sm text-bistro-100 focus:outline-none focus:border-bistro-primary placeholder-stone-600">
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-4">
+                    <button onclick="copyAndSubmitOrder()" class="w-full py-4 bg-gradient-to-r from-bistro-accent to-bistro-primary text-bistro-950 font-serif font-bold text-base tracking-widest rounded-lg shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="check-square" class="w-5 h-5"></i>
+                        生成并复制点单文案
+                    </button>
+                    <p class="text-[10px] text-center text-stone-500 mt-2">文案生成后将自动写入剪贴板，可直接粘贴发给主人/主厨</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-bistro-primary text-bistro-950 px-6 py-3 rounded-full shadow-2xl font-serif text-sm font-bold flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300">
+        <i data-lucide="party-popper" class="w-4 h-4"></i>
+        <span id="toastText">订单已复制！</span>
+    </div>
+
+    <script>
+        // 1. Full database without duplicates
+        const dishes = [
+            // 开胃前菜
+            { id: '1', name: '樱桃萝卜一夜渍', cat: 'appetizer', tag: '日式清爽', desc: '酸甜爽脆，粉嫩诱人，绝佳的清口开胃前菜。' },
+            { id: '2', name: '韩式辣酱酱鸡蛋', cat: 'appetizer', tag: '浓郁爆浆', desc: '酱汁饱满绵密，溏心饱实，韩风滋味十足。' },
+            { id: '3', name: '雪菜毛豆', cat: 'appetizer', tag: '江浙清鲜', desc: '江南夏令时鲜，雪里蕻的咸鲜完美吊出毛豆的清甜。' },
+            { id: '4', name: '炸包菜', cat: 'appetizer', tag: '街头干香', desc: '高火猛过，包菜边微微焦脆，香气霸道勾人。' },
+
+            // 慢炖招牌
+            { id: '5', name: '窑鸡', cat: 'signature', tag: '皮脆汁多', desc: '古法风味，荷叶包裏密封慢焗，撕开瞬间汤汁横溢。' },
+            { id: '6', name: '可乐牛肋排', cat: 'signature', tag: '西式解构', desc: '慢火大炖，可乐的焦糖香深度沁入骨肉，酥烂脱骨。' },
+            { id: '7', name: '腐乳红烧肉', cat: 'signature', tag: '浓油赤酱', desc: '经典海派风味，红艳如玛瑙，肥而不腻，入口即化。' },
+            { id: '8', name: '话梅排骨', cat: 'signature', tag: '生津酸甜', desc: '绍兴黄酒、话梅慢熬，排骨带有一股独特的果香与陈香。' },
+            { id: '9', name: '菠萝排骨', cat: 'signature', tag: '果味清新', desc: '鲜菠萝块的自然果酸解去油脂，酸甜金黄，老少咸宜。' },
+            { id: '10', name: '可乐鸡翅年糕', cat: 'signature', tag: '糯口入味', desc: '鸡翅嫩滑，手打年糕充分吸收了浓稠的酱汁，越嚼越香。' },
+            { id: '11', name: '豆角土豆排骨', cat: 'signature', tag: '扎实炖菜', desc: '地道北方家常炖，食材充分交融，土豆沙糯，豆角软烂。' },
+            { id: '12', name: '酸菜排骨', cat: 'signature', tag: '酸爽大火', desc: '老坛酸菜醇厚发酵，酸辣浓汤把肋排润泽得极其透彻。' },
+
+            // 镬气热炒
+            { id: '13', name: '江西辣排骨', cat: 'wok', tag: '🌶️ 赣味灵魂', desc: '猛火劲辣，江西赣菜硬核代表，骨香肉辣，爱辣狂喜。' },
+            { id: '14', name: '辣椒炒肉', cat: 'wok', tag: '🌶️ 下饭神菜', desc: '油润多汁，镬气十足，豆豉香融合鲜辣五花肉。' },
+            { id: '15', name: '农家一碗香', cat: 'wok', tag: '🌶️ 蛋香四溢', desc: '煎荷包蛋与鲜嫩肉片同炒，油脂在高温下激发极致浓香。' },
+            { id: '16', name: '蒜苗炒腊肉', cat: 'wok', tag: '烟熏浓郁', desc: '自制风干腊肉，带着松柏烟熏香气，配上爽脆蒜苗。' },
+            { id: '17', name: '葱姜爆脆鲩', cat: 'wok', tag: '爽脆极致', desc: '精选广东脆肉鲩，高频翻炒锁水，肉质脆韧弹牙不容错过。' },
+            { id: '18', name: '蒜泥白肉', cat: 'wok', tag: '🌶️ 川式蒜香', desc: '薄切猪五花，配上秘制红油、浓郁蒜泥与脆爽黄瓜片。' },
+            { id: '19', name: '粉蒸肉', cat: 'wok', tag: '酥烂软糯', desc: '五香米粉完全裹住肉片，大火蒸透，五花肉肥美，红薯垫底。' },
+            { id: '20', name: '酸辣包菜拌煎蛋', cat: 'wok', tag: '🌶️ 新颖创意', desc: '微焦流心蛋切碎融入酸辣手撕包菜，口感层次极佳。' },
+            { id: '21', name: '炝炒大白菜', cat: 'wok', tag: '急火快干', desc: '干辣椒与花椒瞬间炝锅，白菜帮爽脆多汁、叶片干香。' },
+
+            // 砂锅滑牛
+            { id: '22', name: '胸口油焗牛肉', cat: 'claypot', tag: '弹牙脆爽', desc: '稀缺胸口油的脆爽结合滑嫩牛里脊，牛油香气四溢。' },
+            { id: '23', name: '沙茶牛肉煲', cat: 'claypot', tag: '潮汕经典', desc: '浓稠沙茶酱、芹菜与鲜牛肉砂锅滚煲，带有沙茶微甜微辣。' },
+            { id: '24', name: '腐竹牛肉', cat: 'claypot', tag: '酱香吸汁', desc: '干炸腐竹充分吸收了慢煨牛肉的醇厚浓汁，滑嫩无比。' },
+            { id: '25', name: '芋子滑牛肉', cat: 'claypot', tag: '温柔粉糯', desc: '本地小芋子打底，牛肉采用极其滑嫩的广式拉油滑炒。' },
+            { id: '26', name: '虾仁粉丝煲', cat: 'claypot', tag: '海味干香', desc: '鲜美大虾、秘制虾油，粉丝在砂锅中烤出焦香，干爽不粘。' },
+            { id: '27', name: '上汤鲜竹卷', cat: 'claypot', tag: '清鲜儒雅', desc: '腐皮卷肉上汤慢煨，饱浸汤汁，鲜甜儒雅。' },
+
+            // 江海家烧
+            { id: '28', name: '家烧黄鱼', cat: 'seafood', tag: '台州神韵', desc: '沿海台州式家烧，汤头乳白微黄，鱼肉如蒜瓣，极鲜美。' },
+            { id: '29', name: '家烧梭子蟹', cat: 'seafood', tag: '应季海鲜', desc: '家常酱烧，蟹肉饱满，蟹膏油脂与酱油香在锅中完美融合。' },
+            { id: '30', name: '泉州鱼饭', cat: 'seafood', tag: '闽南古法', desc: '古法木桶盐水慢浸，锁住海鱼最纯粹的甘甜与本味。' },
+            { id: '31', name: '盐水小白虾', cat: 'seafood', tag: '江南清鲜', desc: '鲜活小白虾盐水简灼，肉质脆甜，最是不造作的本真鲜甜。' },
+
+            // 温柔家常
+            { id: '32', name: '肉饼蒸蛋', cat: 'comfort', tag: '童年记忆', desc: '手剁肉饼融入高汤，打入鲜蛋慢蒸，嫩滑清甜。' },
+            { id: '33', name: '梅干菜肉饼', cat: 'comfort', tag: '绍兴陈香', desc: '绍兴老梅干菜与半肥瘦猪肉融合，清蒸后油香极其馥郁。' },
+            { id: '34', name: '香肠蒸毛豆', cat: 'comfort', tag: '鲜咸江南', desc: '风干香肠的丰腴油脂渗透进清甜的毛豆，下饭一绝。' },
+            { id: '35', name: '土豆蒸腊鸡腿', cat: 'comfort', tag: '干香别致', desc: '风干腊鸡腿咸鲜紧实，土豆蒸得软烂饱浸鸡油香。' },
+            { id: '36', name: '烂糊肉丝', cat: 'comfort', tag: '柔糯无骨', desc: '江南老传统菜，白菜炖至软糯如烂糊，肉丝鲜嫩。' },
+            { id: '37', name: '小白菜熬洋芋', cat: 'comfort', tag: '朴实落胃', desc: '洋芋沙化成浓汤包裹住小白菜，朴素、原味、极治愈。' },
+            { id: '38', name: '糖醋荷包蛋', cat: 'comfort', tag: '经典酸甜', desc: '蛋边缘煎起焦酥蕾丝边，裹满经典黄金比例的糖醋汁。' },
+            { id: '39', name: '北非蛋', cat: 'comfort', tag: '西式融汇', desc: '浓郁番茄洋葱酱汁烘烤流心蛋，异域香气，极适合配面包。' },
+
+            // 暖胃汤羹
+            { id: '40', name: '皮蛋肉饼汤', cat: 'soup', tag: '瓦罐灵魂', desc: '纯正江西街头灵魂，手打肉饼大火气蒸，皮蛋醇香落胃。' },
+            { id: '41', name: '滑肉汤', cat: 'soup', tag: '地方风味', desc: '爽滑猪肉片，配以微酸汤底，细腻无比，爽口去油腻。' },
+            { id: '42', name: '毛豆肉圆汤', cat: 'soup', tag: '江浙清流', desc: '盛夏最爱的江南清汤，大个手捏肉圆子，汤清味美。' },
+            { id: '43', name: '番茄肉丸汤', cat: 'soup', tag: '老少皆宜', desc: '番茄熬成沙浓赤汤，手挤小肉丸滑软，酸甜开胃。' },
+
+            // 地方主食
+            { id: '44', name: '铅山烫粉', cat: 'staple', tag: '🌶️ 上饶非遗', desc: '地道江西铅山烫粉，米粉爽滑，骨汤醇厚，辣意通透。' },
+            { id: '45', name: '铅山炒粉', cat: 'staple', tag: '🌶️ 镬气王者', desc: '极重镬气，米粉韧劲，裹着肉丝青菜，江西炒粉YYDS。' },
+            { id: '46', name: '灯盏粿', cat: 'staple', tag: '非遗手作', desc: '上饶极具代表性的小吃，形如灯盏，米香四溢，馅料丰富。' },
+            { id: '47', name: '潮汕鱼粥', cat: 'staple', tag: '深夜治愈', desc: '生滚海鱼、芹菜粒、冬菜，粥水绵密鲜甜，直透心脾。' },
+            { id: '48', name: '黄鱼炒饭', cat: 'staple', tag: '海味高端', desc: '黄鱼肉拆骨煎香，与隔夜饭、蛋碎炒出颗颗金黄，鲜不可言。' },
+            { id: '49', name: '带鱼炒饭', cat: 'staple', tag: '风味独创', desc: '去骨带鱼肉煸到酥脆，搭配葱花急火爆炒，风味绝伦。' },
+            { id: '50', name: '咸肉菜饭', cat: 'staple', tag: '沪上铜锅', desc: '风干咸肉丁、碧绿青菜与糯米焖饭，底部带有一层薄锅巴。' },
+            { id: '51', name: '卤肉饭', cat: 'staple', tag: '胶质满满', desc: '慢熬五花肉丁至胶质释出，酱油红葱头浓郁，盖在热米饭上。' },
+            { id: '52', name: '免治牛肉饭', cat: 'staple', tag: '港味茶餐厅', desc: '牛肉碎搭配生抽、洋葱碎与滑嫩煎流心蛋，拌饭一流。' }
+        ];
+
+        const categories = {
+            appetizer: '开胃冷热小菜',
+            signature: '慢炖/主厨招牌',
+            wok: '火爆镬气热炒',
+            claypot: '砂锅生啫/滑牛',
+            seafood: '江海时鲜/家烧',
+            comfort: '温柔家常蒸炖',
+            soup: '汤羹滋润落胃',
+            staple: '主厨灵魂碳水'
+        };
+
+        const catIcons = {
+            appetizer: 'snowflake',
+            signature: 'award',
+            wok: 'flame',
+            claypot: 'soup',
+            seafood: 'fish',
+            comfort: 'smile',
+            soup: 'coffee',
+            staple: 'utensils-2'
+        };
+
+        // 2. State management
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let basket = {}; // format: { dishId: { count: Number, note: String } }
+        let isBasketOpen = false;
+
+        // 3. Render functions
+        function initApp() {
+            renderCategories();
+            renderDishes();
+            lucide.createIcons();
+            updateBasketUI();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryTabs');
+            // Keep "All" and append others
+            container.innerHTML = `<button onclick="filterCategory('all')" class="category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border transition-all ${currentFilter === 'all' ? 'border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold' : 'border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary'}" data-cat="all">全席 Menu</button>`;
+            
+            Object.entries(categories).forEach(([key, name]) => {
+                const isActive = currentFilter === key;
+                const btn = document.createElement('button');
+                btn.onclick = () => filterCategory(key);
+                btn.className = `category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border transition-all flex items-center gap-1.5 ${isActive ? 'border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold' : 'border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary'}`;
+                btn.dataset.cat = key;
+                btn.innerHTML = `<i data-lucide="${catIcons[key] || 'dot'}" class="w-3.5 h-3.5"></i>${name}`;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderDishes() {
+            const grid = document.getElementById('dishesGrid');
+            grid.innerHTML = '';
+
+            const filtered = dishes.filter(d => {
+                const matchesCat = (currentFilter === 'all' || d.cat === currentFilter);
+                const matchesSearch = d.name.includes(searchQuery) || d.desc.includes(searchQuery) || d.tag.includes(searchQuery);
+                return matchesCat && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('noResults').classList.remove('hidden');
+                grid.classList.add('hidden');
+                return;
+            } else {
+                document.getElementById('noResults').classList.add('hidden');
+                grid.classList.remove('hidden');
+            }
+
+            filtered.forEach(dish => {
+                const isSelected = basket[dish.id] && basket[dish.id].count > 0;
+                const count = isSelected ? basket[dish.id].count : 0;
+
+                const card = document.createElement('div');
+                card.className = `group relative rounded-xl border p-5 transition-all duration-300 bg-bistro-900 cursor-pointer flex flex-col justify-between ${
+                    isSelected 
+                    ? 'border-bistro-primary shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-bistro-850' 
+                    : 'border-bistro-800/60 hover:border-bistro-700 hover:bg-bistro-850'
+                }`;
+                card.onclick = (e) => {
+                    // Prevent trigger if clicking on note input or +/- buttons
+                    if (e.target.closest('.no-card-click')) return;
+                    toggleDish(dish.id);
+                };
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Category Accent -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] tracking-wider uppercase font-serif text-bistro-primary bg-bistro-primary/10 border border-bistro-primary/20 px-2 py-0.5 rounded">
+                                ${categories[dish.cat]}
+                            </span>
+                            ${isSelected ? `<span class="flex items-center text-bistro-primary text-xs font-semibold gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i>已选</span>` : ''}
+                        </div>
+
+                        <!-- Name and Description -->
+                        <h3 class="font-serif text-lg text-bistro-100 mb-1 flex items-center gap-2 group-hover:text-bistro-primary transition-colors">
+                            ${dish.name}
+                            <span class="text-[11px] font-sans px-1.5 py-0.2 text-stone-400 bg-bistro-800 rounded font-normal">${dish.tag}</span>
+                        </h3>
+                        <p class="text-xs text-stone-400 font-serif leading-relaxed mb-4 line-clamp-2">${dish.desc}</p>
+                    </div>
+
+                    <!-- Footer Controls -->
+                    <div class="pt-3 border-t border-bistro-800/40 flex items-center justify-between no-card-click">
+                        <!-- Custom Dish Note Input -->
+                        <div class="flex-grow mr-2">
+                            ${isSelected ? `
+                                <input type="text" placeholder="加辣/少盐..." value="${basket[dish.id].note || ''}" 
+                                    onchange="updateDishNote('${dish.id}', this.value)"
+                                    class="w-full bg-bistro-950 border border-bistro-800 rounded px-2 py-1 text-[11px] text-bistro-100 focus:outline-none focus:border-bistro-primary placeholder-stone-600">
+                            ` : '<span class="text-[10px] text-stone-600">未选中菜品</span>'}
+                        </div>
+
+                        <!-- Plus Minus Controls -->
+                        <div class="flex items-center bg-bistro-950 border border-bistro-800 rounded-full p-0.5">
+                            ${isSelected ? `
+                                <button onclick="decreaseDish('${dish.id}')" class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-bistro-primary rounded-full hover:bg-bistro-900 transition-colors">
+                                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <span class="px-2 text-xs font-bold text-bistro-primary">${count}</span>
+                            ` : ''}
+                            <button onclick="increaseDish('${dish.id}')" class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-bistro-primary rounded-full hover:bg-bistro-900 transition-colors">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // 4. Interaction Handlers
+        function filterCategory(cat) {
+            currentFilter = cat;
+            // Update active state of buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.className = "category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold transition-all flex items-center gap-1.5";
+                } else {
+                    const k = btn.dataset.cat;
+                    btn.className = "category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary transition-all flex items-center gap-1.5";
+                }
+            });
+            renderDishes();
+        }
+
+        // Live Search with Debounce style or Instant
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            renderDishes();
+        });
+
+        function toggleDish(id) {
+            if (basket[id]) {
+                delete basket[id];
+            } else {
+                basket[id] = { count: 1, note: '' };
+            }
+            renderDishes();
+            updateBasketUI();
+        }
+
+        function increaseDish(id) {
+            if (!basket[id]) {
+                basket[id] = { count: 1, note: '' };
+            } else {
+                basket[id].count++;
+            }
+            renderDishes();
+            updateBasketUI();
+        }
+
+        function decreaseDish(id) {
+            if (basket[id]) {
+                basket[id].count--;
+                if (basket[id].count <= 0) {
+                    delete basket[id];
+                }
+            }
+            renderDishes();
+            updateBasketUI();
+        }
+
+        function updateDishNote(id, note) {
+            if (basket[id]) {
+                basket[id].note = note.trim();
+            }
+        }
+
+        // 5. Basket Operations
+        function updateBasketUI() {
+            const basketBadge = document.getElementById('basketBadge');
+            const basketBrief = document.getElementById('basketBrief');
+            const basketSummary = document.getElementById('basketSummary');
+            const basketItemsList = document.getElementById('basketItemsList');
+
+            const totalCount = Object.values(basket).reduce((sum, item) => sum + item.count, 0);
+
+            if (totalCount > 0) {
+                // Show basket summary
+                basketSummary.classList.remove('translate-y-full');
+                basketBadge.textContent = totalCount;
+                
+                const names = Object.keys(basket).map(id => {
+                    const dish = dishes.find(d => d.id === id);
+                    return dish ? dish.name : '';
+                }).filter(Boolean).slice(0, 3);
+                
+                basketBrief.textContent = `精选了: ${names.join('、')}${Object.keys(basket).length > 3 ? ' 等美味' : ''}`;
+            } else {
+                // Hide basket
+                basketSummary.classList.add('translate-y-full');
+                basketBadge.textContent = 0;
+                isBasketOpen = false;
+                document.getElementById('drawerArrow').style.transform = 'rotate(0deg)';
+                document.getElementById('drawerToggleText').textContent = '展开点单详情';
+            }
+
+            // Fill the list inside Drawer
+            basketItemsList.innerHTML = '';
+            Object.entries(basket).forEach(([id, item]) => {
+                const dish = dishes.find(d => d.id === id);
+                if (!dish) return;
+
+                const row = document.createElement('div');
+                row.className = "py-3 flex items-center justify-between gap-4";
+                row.innerHTML = `
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-2">
+                            <span class="font-serif text-sm font-semibold text-bistro-100">${dish.name}</span>
+                            <span class="text-[10px] text-stone-500">${dish.tag}</span>
+                        </div>
+                        <input type="text" placeholder="单独备注（例：微辣/不加葱）" value="${item.note || ''}" 
+                            onchange="updateDishNote('${dish.id}', this.value); syncNoteInputInGrid('${dish.id}', this.value)"
+                            class="w-full mt-1 bg-bistro-950 border border-bistro-800/80 rounded px-2 py-1 text-[11px] text-bistro-100 focus:outline-none focus:border-bistro-primary placeholder-stone-700">
+                    </div>
+                    <div class="flex items-center bg-bistro-950 border border-bistro-800 rounded-full p-0.5 shrink-0">
+                        <button onclick="decreaseDish('${dish.id}')" class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-bistro-primary rounded-full hover:bg-bistro-900 transition-colors">
+                            <i data-lucide="minus" class="w-3 h-3"></i>
+                        </button>
+                        <span class="px-2 text-xs font-bold text-bistro-primary">${item.count}</span>
+                        <button onclick="increaseDish('${dish.id}')" class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-bistro-primary rounded-full hover:bg-bistro-900 transition-colors">
+                            <i data-lucide="plus" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                `;
+                basketItemsList.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function syncNoteInputInGrid(id, val) {
+            // Re-render to keep grid inputs in sync
+            renderDishes();
+        }
+
+        function toggleBasketDrawer() {
+            const drawer = document.getElementById('basketSummary');
+            const arrow = document.getElementById('drawerArrow');
+            const toggleText = document.getElementById('drawerToggleText');
+
+            if (isBasketOpen) {
+                // Close
+                drawer.style.transform = 'translateY(calc(100% - 56px))'; // Leaves only the header bar
+                arrow.style.transform = 'rotate(0deg)';
+                toggleText.textContent = '展开点单详情';
+                isBasketOpen = false;
+            } else {
+                // Open
+                drawer.style.transform = 'translateY(0)';
+                arrow.style.transform = 'rotate(180deg)';
+                toggleText.textContent = '收起点单详情';
+                isBasketOpen = true;
+            }
+        }
+
+        // 6. Copy & Submit functionality
+        function copyAndSubmitOrder() {
+            const totalCount = Object.values(basket).reduce((sum, item) => sum + item.count, 0);
+            if (totalCount === 0) return;
+
+            const globalSpice = document.getElementById('globalSpice').value;
+            const globalNotes = document.getElementById('globalNotes').value.trim();
+
+            let text = `🏮 𝖯𝖱𝖨𝖵𝖠𝖳𝖤  𝖡𝖨𝖲𝖳𝖱𝖮  私房点单单 🏮\n`;
+            text += `===============================\n`;
+
+            // Group by category to look beautifully organized!
+            const catGroups = {};
+            Object.entries(basket).forEach(([id, item]) => {
+                const dish = dishes.find(d => d.id === id);
+                if (!dish) return;
+                if (!catGroups[dish.cat]) catGroups[dish.cat] = [];
+                catGroups[dish.cat].push({ dish, count: item.count, note: item.note });
+            });
+
+            Object.entries(catGroups).forEach(([catKey, items]) => {
+                text += `\n【${categories[catKey]}】\n`;
+                items.forEach(el => {
+                    text += ` 🔘 ${el.dish.name}  x ${el.count}`;
+                    if (el.note) {
+                        text += `  (备注: ${el.note})`;
+                    }
+                    text += `\n`;
+                });
+            });
+
+            text += `\n===============================\n`;
+            text += `🏷️ 口味偏好: ${globalSpice}\n`;
+            if (globalNotes) {
+                text += `✍️ 客人备注: ${globalNotes}\n`;
+            }
+            text += `宴席专享，祝您用餐愉快！✨`;
+
+            // Legacy & iframe proof copy command
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = text;
+            tempTextarea.style.position = 'fixed';
+            tempTextarea.style.opacity = '0';
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("点单文本已完美复制！快发给大厨吧。");
+                } else {
+                    showToast("复制失败，请全选手动复制");
+                }
+            } catch (err) {
+                showToast("复制异常，请手动复制");
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            toastText.textContent = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Wait for page load
+        window.onload = function() {
+            initApp();
+        }
+    </script>
+</body>
+</html>

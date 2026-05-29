@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chef Sean's Table · 私厨菜单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+SC:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Noto Serif SC"', 'serif'],
+                        display: ['Cinzel', 'serif'],
+                    },
+                    colors: {
+                        bistro: {
+                            950: '#0F0E0C',
+                            900: '#1A1713',
+                            800: '#26211B',
+                            700: '#3D352B',
+                            100: '#F5EFE6',
+                            primary: '#D4AF37',
+                            accent: '#C85A17',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0F0E0C;
+            color: #F5EFE6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1A1713;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3D352B;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .category-content.open {
+            max-height: 3000px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="relative border-b border-bistro-800 bg-bistro-950 py-12 px-6 overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_70%)]"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <h1 class="font-display text-3xl md:text-4xl tracking-widest text-bistro-primary mb-3">
+                𝖢𝖧𝖤𝖥 𝖲𝖤𝖠𝖭'𝖲 𝖳𝖠𝖡𝖫𝖤
+            </h1>
+            <h2 class="font-serif text-xl md:text-2xl font-light tracking-wide text-bistro-100 mb-6">
+                私 厨 菜 单
+            </h2>
+            <div class="w-24 h-0.5 bg-gradient-to-r from-transparent via-bistro-primary to-transparent mx-auto mb-6"></div>
+            <p class="max-w-xl mx-auto text-sm md:text-base text-stone-400 font-serif leading-relaxed">
+                融汇江西至辣、江浙海错、广府镬气与无国界融合暖心风味。
+            </p>
+        </div>
+    </header>
+
+    <section class="sticky top-0 z-30 bg-bistro-950/90 backdrop-blur-md border-b border-bistro-800 py-4 px-4 shadow-lg">
+        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+            <div class="relative w-full">
+                <input type="text" id="searchInput" placeholder="搜索风味名、主料..." 
+                    class="w-full pl-10 pr-4 py-2 bg-bistro-900 border border-bistro-800 rounded-full text-sm text-bistro-100 focus:outline-none focus:border-bistro-primary transition-colors placeholder-stone-500">
+                <i data-lucide="search" class="absolute left-3.5 top-2.5 w-4.5 h-4.5 text-stone-500"></i>
+            </div>
+            <div class="w-full overflow-x-auto no-scrollbar py-1">
+                <div class="flex gap-2 min-w-max" id="categoryTabs">
+                    <button onclick="filterCategory('all')" class="category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border border-bistro-primary bg-bistro-primary text-bistro-950 transition-all font-semibold" data-cat="all">
+                        全席 (All)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow">
+        <div id="menuContainer" class="space-y-4">
+        </div>
+        <div id="noResults" class="hidden text-center py-16">
+            <i data-lucide="compass" class="w-12 h-12 text-stone-600 mx-auto mb-4"></i>
+            <h3 class="font-serif text-lg text-stone-400">未能觅得此番美味</h3>
+            <p class="text-xs text-stone-600 mt-2">换个词搜搜看，或是浏览其他分类吧</p>
+        </div>
+    </main>
+
+    <footer class="border-t border-bistro-800 bg-bistro-950 py-8 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <p class="text-stone-500 font-serif text-sm">
+                <i data-lucide="chef-hat" class="w-4 h-4 inline mr-2 text-bistro-primary"></i>
+                Chef Sean · 用心呈现每一道菜
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        const menuData = [
+            {
+                id: 'appetizer',
+                emoji: '🥢',
+                name: '𝖮𝖯𝖤𝖭𝖨𝖭𝖦 · 开胃前菜/清口小菜',
+                dishes: [
+                    { name: '樱桃萝卜一夜渍', desc: '清爽解腻' },
+                    { name: '韩式辣酱酱鸡蛋', desc: '浓郁绵密' },
+                    { name: '雪菜毛豆', desc: '鲜美下酒' },
+                    { name: '炸包菜', desc: '干香酥脆' }
+                ]
+            },
+            {
+                id: 'signature',
+                emoji: '👑',
+                name: '𝖲𝖨𝖦𝖭𝖠𝖳𝖴𝖱𝖤 · 主厨招牌/慢炖大菜',
+                dishes: [
+                    { name: '窑鸡', desc: '皮脆肉嫩，鲜汁满溢' },
+                    { name: '可乐牛肋排', desc: '西式解构，酱香浓郁' },
+                    { name: '腐乳红烧肉', desc: '浓油赤酱，软糯肥美' },
+                    { name: '话梅排骨', desc: '生津酸甜' },
+                    { name: '菠萝排骨', desc: '果香解腻' },
+                    { name: '可乐鸡翅年糕', desc: '软糯入味' },
+                    { name: '豆角土豆排骨', desc: '扎实北方炖' },
+                    { name: '酸菜排骨', desc: '酸爽开胃' },
+                    { name: '苹果肉桂猪扒', desc: '果香馥郁，外香里嫩' }
+                ]
+            },
+            {
+                id: 'wok',
+                emoji: '🌶️',
+                name: '𝖶𝖮𝖪 · 镬气热炒/热辣下饭',
+                dishes: [
+                    { name: '江西辣排骨', desc: '赣味灵魂，嗜辣首选' },
+                    { name: '辣椒炒肉', desc: '经典下饭神菜' },
+                    { name: '农家一碗香', desc: '蛋香肉嫩' },
+                    { name: '蒜苗炒腊肉', desc: '烟熏腊香' },
+                    { name: '葱姜爆脆鲩', desc: '爽脆鲜甜' },
+                    { name: '蒜泥白肉', desc: '川式红油' },
+                    { name: '粉蒸肉', desc: '米粉软糯，肉质酥烂' },
+                    { name: '酸辣包菜拌煎蛋', desc: '新颖酸辣' },
+                    { name: '炝炒大白菜', desc: '快手干香' }
+                ]
+            },
+            {
+                id: 'claypot',
+                emoji: '🥘',
+                name: '𝖢𝖫𝖠𝖸𝖯𝖮𝖳 · 广式生啫/砂锅/滑牛肉',
+                dishes: [
+                    { name: '胸口油焗牛肉', desc: '弹牙牛脂香，老饕必点' },
+                    { name: '沙茶牛肉煲', desc: '潮汕经典风味' },
+                    { name: '腐竹牛肉', desc: '浓郁吸汁' },
+                    { name: '芋头滑牛肉', desc: '粉糯滑嫩' },
+                    { name: '虾仁粉丝煲', desc: '鲜美干香' },
+                    { name: '上汤鲜竹卷', desc: '汤清味正' }
+                ]
+            },
+            {
+                id: 'seafood',
+                emoji: '🦀',
+                name: '𝖲𝖤𝖠𝖥𝖮𝖮𝖣 · 沿海家烧/江河时鲜',
+                dishes: [
+                    { name: '家烧黄鱼', desc: '浙东台州流派，汤汁浓醇' },
+                    { name: '家烧梭子蟹', desc: '鲜甜肥美' },
+                    { name: '泉州鱼饭', desc: '闽南古法，极致本味' },
+                    { name: '盐水小白虾', desc: '江南清鲜' }
+                ]
+            },
+            {
+                id: 'comfort',
+                emoji: '🥬',
+                name: '𝖧𝖮𝖬𝖤𝖲𝖳𝖸𝖫𝖤 · 风味蒸物/温柔家常',
+                dishes: [
+                    { name: '肉饼蒸蛋', desc: '童年记忆，鲜嫩多汁' },
+                    { name: '梅干菜肉饼', desc: '咸香陈郁' },
+                    { name: '香肠蒸毛豆', desc: '咸鲜适口' },
+                    { name: '土豆蒸腊鸡腿', desc: '风干风味' },
+                    { name: '烂糊肉丝', desc: '温柔软糯' },
+                    { name: '小白菜熬洋芋', desc: '朴实治愈' },
+                    { name: '糖醋荷包蛋', desc: '酸甜金黄' },
+                    { name: '北非蛋', desc: '番茄浓郁，流心异国风' }
+                ]
+            },
+            {
+                id: 'soup',
+                emoji: '🥣',
+                name: '𝖲𝖮𝖴𝖯𝖲 · 润喉暖胃汤羹',
+                dishes: [
+                    { name: '皮蛋肉饼汤', desc: '瓦罐灵魂，地道街头味' },
+                    { name: '滑肉汤', desc: '细腻滑嫩' },
+                    { name: '毛豆肉圆汤', desc: '清鲜落胃' },
+                    { name: '番茄肉丸汤', desc: '酸甜开胃' }
+                ]
+            },
+            {
+                id: 'staple',
+                emoji: '🍜',
+                name: '𝖲𝖳𝖠𝖯𝖫𝖤𝖲 · 地方主食/灵魂碳水',
+                dishes: [
+                    { name: '铅山烫粉', desc: '江西上饶非遗风味' },
+                    { name: '铅山炒粉', desc: '镬气十足，米粉一绝' },
+                    { name: '灯盏粿', desc: '极为少见的地道手作小吃' },
+                    { name: '潮汕鱼粥', desc: '深夜治愈系' },
+                    { name: '黄鱼炒饭', desc: '高端鲜美' },
+                    { name: '带鱼炒饭', desc: '风味独特' },
+                    { name: '咸肉菜饭', desc: '干香有嚼劲' },
+                    { name: '卤肉饭', desc: '胶质满满' },
+                    { name: '免治牛肉饭', desc: '港澳茶餐厅经典' }
+                ]
+            }
+        ];
+
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let openCategories = ['appetizer'];
+
+        function initApp() {
+            renderCategories();
+            renderMenu();
+            lucide.createIcons();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryTabs');
+            container.innerHTML = `<button onclick="filterCategory('all')" class="category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border transition-all ${currentFilter === 'all' ? 'border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold' : 'border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary'}" data-cat="all">全席 Menu</button>`;
+            
+            menuData.forEach(cat => {
+                const isActive = currentFilter === cat.id;
+                const btn = document.createElement('button');
+                btn.onclick = () => filterCategory(cat.id);
+                btn.className = `category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border transition-all flex items-center gap-1.5 ${isActive ? 'border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold' : 'border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary'}`;
+                btn.dataset.cat = cat.id;
+                btn.innerHTML = `<span class="text-sm">${cat.emoji}</span>${cat.name.split(' · ')[1] || cat.name}`;
+                container.appendChild(btn);
+            });
+        }
+
+        function filterCategory(catId) {
+            currentFilter = catId;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                const isActive = btn.dataset.cat === catId;
+                btn.className = `category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border transition-all flex items-center gap-1.5 ${isActive ? 'border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold' : 'border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary'}`;
+            });
+            renderMenu();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            renderMenu();
+        });
+
+        function toggleCategory(catId) {
+            const index = openCategories.indexOf(catId);
+            if (index > -1) {
+                openCategories.splice(index, 1);
+            } else {
+                openCategories.push(catId);
+            }
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menuContainer');
+            const noResults = document.getElementById('noResults');
+            container.innerHTML = '';
+
+            const filteredCategories = menuData.filter(cat => {
+                if (currentFilter !== 'all' && cat.id !== currentFilter) return false;
+                
+                if (searchQuery) {
+                    const hasMatchingDish = cat.dishes.some(dish => 
+                        dish.name.includes(searchQuery) || dish.desc.includes(searchQuery)
+                    );
+                    return hasMatchingDish;
+                }
+                return true;
+            });
+
+            if (filteredCategories.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            filteredCategories.forEach(cat => {
+                const isOpen = openCategories.includes(cat.id);
+                
+                let filteredDishes = cat.dishes;
+                if (searchQuery) {
+                    filteredDishes = cat.dishes.filter(dish => 
+                        dish.name.includes(searchQuery) || dish.desc.includes(searchQuery)
+                    );
+                }
+
+                const categoryEl = document.createElement('div');
+                categoryEl.className = 'rounded-xl border border-bistro-800 bg-bistro-900 overflow-hidden';
+
+                categoryEl.innerHTML = `
+                    <div onclick="toggleCategory('${cat.id}')" class="flex items-center justify-between p-5 cursor-pointer bg-gradient-to-r from-bistro-900 to-bistro-850 hover:from-bistro-850 hover:to-bistro-800 transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${cat.emoji}</span>
+                            <div>
+                                <h3 class="font-serif text-base text-bistro-100">${cat.name}</h3>
+                                <p class="text-xs text-stone-500 mt-0.5">${filteredDishes.length} 道美味</p>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-bistro-primary transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
+                    </div>
+                    <div class="category-content ${isOpen ? 'open' : ''}">
+                        <div class="border-t border-bistro-800">
+                            ${filteredDishes.map(dish => `
+                                <div class="flex items-start justify-between p-5 border-t border-bistro-800/30 first:border-t-0 hover:bg-bistro-850/30 transition-colors">
+                                    <div class="flex-grow pr-4">
+                                        <h4 class="font-serif text-base text-bistro-100 mb-1">${dish.name}</h4>
+                                        ${dish.desc ? `<p class="text-sm text-stone-400">${dish.desc}</p>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(categoryEl);
+            });
+
+            lucide.createIcons();
+        }
+
+        window.onload = function() {
+            initApp();
+        }
+    </script>
+</body>
+</html>

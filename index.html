@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chef Sean's Table · 私厨菜单</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFFAF5 100%);
+            color: #3D2914;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+            padding: 24px 20px 20px;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.25);
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .container {
+            padding: 16px 16px 80px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .category {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .category:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .category-header {
+            padding: 18px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF4E8 100%);
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            background: linear-gradient(135deg, #FFF4E8 0%, #FFECD5 100%);
+        }
+
+        .category-header.active {
+            background: linear-gradient(135deg, #FFF4E8 0%, #FFECD5 100%);
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .category-emoji {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .category-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #C2410C;
+            letter-spacing: 0.5px;
+        }
+
+        .category-icon {
+            transition: transform 0.3s ease;
+            color: #F97316;
+            font-size: 20px;
+        }
+
+        .category-header.active .category-icon {
+            transform: rotate(180deg);
+        }
+
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-content.open {
+            max-height: 2000px;
+        }
+
+        .dish-list {
+            padding: 4px 0;
+        }
+
+        .dish-item {
+            padding: 14px 20px;
+            border-top: 1px solid #FFF0E0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            transition: background 0.2s ease;
+        }
+
+        .dish-item:first-child {
+            border-top: none;
+        }
+
+        .dish-item:hover {
+            background: #FFF8F0;
+        }
+
+        .dish-info {
+            flex: 1;
+        }
+
+        .dish-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #3D2914;
+            margin-bottom: 4px;
+        }
+
+        .dish-desc {
+            font-size: 13px;
+            color: #8B6F47;
+            line-height: 1.5;
+        }
+
+        .dish-tag {
+            background: #FEF3C7;
+            color: #B45309;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px 20px;
+            color: #A8896C;
+            font-size: 12px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dish-item {
+            animation: fadeInUp 0.3s ease forwards;
+        }
+
+        .dish-item:nth-child(1) { animation-delay: 0.05s; }
+        .dish-item:nth-child(2) { animation-delay: 0.1s; }
+        .dish-item:nth-child(3) { animation-delay: 0.15s; }
+        .dish-item:nth-child(4) { animation-delay: 0.2s; }
+        .dish-item:nth-child(5) { animation-delay: 0.25s; }
+        .dish-item:nth-child(6) { animation-delay: 0.3s; }
+        .dish-item:nth-child(7) { animation-delay: 0.35s; }
+        .dish-item:nth-child(8) { animation-delay: 0.4s; }
+        .dish-item:nth-child(9) { animation-delay: 0.45s; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Chef Sean's Table</h1>
+        <p>私厨 · 用心做每一道菜</p>
+    </div>
+
+    <div class="container" id="menu-container"></div>
+
+    <div class="footer">
+        <p>👨‍🍳 Chef Sean · 用心呈现</p>
+    </div>
+
+    <script>
+        const menuData = [
+            {
+                emoji: "🥢",
+                name: "𝖮𝖯𝖤𝖭𝖨𝖭𝖦 · 开胃前菜/清口小菜",
+                dishes: [
+                    { name: "樱桃萝卜一夜渍", desc: "清爽解腻" },
+                    { name: "韩式辣酱酱鸡蛋", desc: "浓郁绵密" },
+                    { name: "雪菜毛豆", desc: "鲜美下酒" },
+                    { name: "炸包菜", desc: "干香酥脆" }
+                ]
+            },
+            {
+                emoji: "👑",
+                name: "𝖲𝖨𝖦𝖭𝖠𝖳𝖴𝖱𝖤 · 主厨招牌/慢炖大菜",
+                dishes: [
+                    { name: "窑鸡", desc: "皮脆肉嫩，鲜汁满溢" },
+                    { name: "可乐牛肋排", desc: "西式解构，酱香浓郁" },
+                    { name: "腐乳红烧肉", desc: "浓油赤酱，软糯肥美" },
+                    { name: "话梅排骨", desc: "生津酸甜" },
+                    { name: "菠萝排骨", desc: "果香解腻" },
+                    { name: "可乐鸡翅年糕", desc: "软糯入味" },
+                    { name: "豆角土豆排骨", desc: "扎实北方炖" },
+                    { name: "酸菜排骨", desc: "酸爽开胃" },
+                    { name: "苹果肉桂猪扒", desc: "" }
+                ]
+            },
+            {
+                emoji: "🌶️",
+                name: "𝖶𝖮𝖪 · 镬气热炒/热辣下饭",
+                dishes: [
+                    { name: "江西辣排骨", desc: "赣味灵魂，嗜辣首选" },
+                    { name: "辣椒炒肉", desc: "经典下饭神器" },
+                    { name: "农家一碗香", desc: "蛋香肉嫩" },
+                    { name: "蒜苗炒腊肉", desc: "烟熏腊香" },
+                    { name: "葱姜爆脆鲩", desc: "爽脆鲜甜" },
+                    { name: "蒜泥白肉", desc: "川风红油" },
+                    { name: "粉蒸肉", desc: "米粉软糯，肉质酥烂" },
+                    { name: "酸辣包菜拌煎蛋", desc: "新颖酸辣" },
+                    { name: "炝炒大白菜", desc: "快手干香" }
+                ]
+            },
+            {
+                emoji: "🥘",
+                name: "𝖢𝖫𝖠𝖸𝖯𝖮𝖳 · 广式生啫/砂锅/滑牛肉",
+                dishes: [
+                    { name: "胸口油焗牛肉", desc: "弹牙牛脂香，老饕必点" },
+                    { name: "沙茶牛肉煲", desc: "潮汕经典风味" },
+                    { name: "腐竹牛肉", desc: "浓郁吸汁" },
+                    { name: "芋头滑牛肉", desc: "粉糯滑嫩" },
+                    { name: "虾仁粉丝煲", desc: "鲜美干身" },
+                    { name: "上汤鲜竹卷", desc: "汤清味正" }
+                ]
+            },
+            {
+                emoji: "🦀",
+                name: "𝖲𝖤𝖠𝖥𝖮𝖮𝖣 · 沿海家烧/江河时鲜",
+                dishes: [
+                    { name: "家烧黄鱼", desc: "浙东台州流派，汤汁浓醇" },
+                    { name: "家烧梭子蟹", desc: "鲜甜肥美" },
+                    { name: "泉州鱼饭", desc: "闽南古法，极致本味" },
+                    { name: "盐水小白虾", desc: "江南清鲜" }
+                ]
+            },
+            {
+                emoji: "🥬",
+                name: "𝖧𝖮𝖬𝖤𝖲𝖳𝖸𝖫𝖤 · 风味蒸物/温柔家常",
+                dishes: [
+                    { name: "肉饼蒸蛋", desc: "童年记忆，鲜嫩多汁" },
+                    { name: "梅干菜肉饼", desc: "咸香陈郁" },
+                    { name: "香肠蒸毛豆", desc: "咸鲜适口" },
+                    { name: "土豆蒸腊鸡腿", desc: "风干风味" },
+                    { name: "烂糊肉丝", desc: "温柔软糯" },
+                    { name: "小白菜熬洋芋", desc: "朴实治愈" },
+                    { name: "糖醋荷包蛋", desc: "酸甜金黄" },
+                    { name: "北非蛋", desc: "番茄浓郁，流心异国风" }
+                ]
+            },
+            {
+                emoji: "🥣",
+                name: "𝖲𝖮𝖴𝖯𝖲 · 润喉暖胃汤羹",
+                dishes: [
+                    { name: "皮蛋肉饼汤", desc: "瓦罐灵魂，地道街头味" },
+                    { name: "滑肉汤", desc: "细腻滑嫩" },
+                    { name: "毛豆肉圆汤", desc: "清鲜落胃" },
+                    { name: "番茄肉丸汤", desc: "酸甜开胃" }
+                ]
+            },
+            {
+                emoji: "🍜",
+                name: "𝖲𝖳𝖠𝖯𝖫𝖤𝖲 · 地方主食/灵魂碳水",
+                dishes: [
+                    { name: "铅山烫粉", desc: "江西上饶非遗风味" },
+                    { name: "铅山炒粉", desc: "镬气十足，米粉一绝" },
+                    { name: "灯盏粿", desc: "极为少见的地道手作小吃" },
+                    { name: "潮汕鱼粥", desc: "深夜治愈系" },
+                    { name: "黄鱼炒饭", desc: "高端鲜美" },
+                    { name: "带鱼炒饭", desc: "风味独特" },
+                    { name: "咸肉菜饭", desc: "干香有嚼劲" },
+                    { name: "卤肉饭", desc: "胶质满满" },
+                    { name: "免治牛肉饭", desc: "港澳茶餐厅经典" }
+                ]
+            }
+        ];
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            
+            menuData.forEach((category, index) => {
+                const categoryEl = document.createElement('div');
+                categoryEl.className = 'category';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `
+                    <div class="category-title">
+                        <span class="category-emoji">${category.emoji}</span>
+                        <span class="category-name">${category.name}</span>
+                    </div>
+                    <span class="category-icon">▼</span>
+                `;
+                
+                const content = document.createElement('div');
+                content.className = 'category-content';
+                
+                const dishList = document.createElement('div');
+                dishList.className = 'dish-list';
+                
+                category.dishes.forEach(dish => {
+                    const dishItem = document.createElement('div');
+                    dishItem.className = 'dish-item';
+                    dishItem.innerHTML = `
+                        <div class="dish-info">
+                            <div class="dish-name">${dish.name}</div>
+                            ${dish.desc ? `<div class="dish-desc">${dish.desc}</div>` : ''}
+                        </div>
+                    `;
+                    dishList.appendChild(dishItem);
+                });
+                
+                content.appendChild(dishList);
+                categoryEl.appendChild(header);
+                categoryEl.appendChild(content);
+                
+                if (index === 0) {
+                    header.classList.add('active');
+                    content.classList.add('open');
+                }
+                
+                header.addEventListener('click', () => {
+                    const isOpen = content.classList.contains('open');
+                    header.classList.toggle('active', !isOpen);
+                    content.classList.toggle('open', !isOpen);
+                });
+                
+                container.appendChild(categoryEl);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', renderMenu);
+    </script>
+</body>
+</html>
