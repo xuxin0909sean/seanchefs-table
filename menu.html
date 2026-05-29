@@ -231,7 +231,7 @@
 
         let currentFilter = 'all';
         let searchQuery = '';
-        let openCategories = ['appetizer'];
+        let openCategories = menuData.map(cat => cat.id);
 
         function initApp() {
             renderCategories();
@@ -256,6 +256,15 @@
 
         function filterCategory(catId) {
             currentFilter = catId;
+            
+            if (catId !== 'all') {
+                if (!openCategories.includes(catId)) {
+                    openCategories = [catId];
+                }
+            } else {
+                openCategories = menuData.map(cat => cat.id);
+            }
+            
             document.querySelectorAll('.category-btn').forEach(btn => {
                 const isActive = btn.dataset.cat === catId;
                 btn.className = `category-btn px-4 py-1.5 rounded-full text-xs md:text-sm font-serif border transition-all flex items-center gap-1.5 ${isActive ? 'border-bistro-primary bg-bistro-primary text-bistro-950 font-semibold' : 'border-bistro-800 bg-bistro-900 text-stone-400 hover:text-bistro-primary'}`;
